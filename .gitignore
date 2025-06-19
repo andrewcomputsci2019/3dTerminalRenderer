@@ -1,0 +1,7 @@
+*.obj
+*.exe
+.vs/
+out/
+build/
+.idea/
+/cmake-build-debug-visual-studio/
