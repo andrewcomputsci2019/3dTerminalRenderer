@@ -8,4 +8,4 @@
 [lighthouse 3d: Frustum culling](https://www.lighthouse3d.com/tutorials/view-frustum-culling/) \
 [indigo quilezles: frustum culling](https://iquilezles.org/articles/frustumcorrect/) \
 [Extracting view frustum: transpose method](https://fgiesen.wordpress.com/2012/08/31/frustum-planes-from-the-projection-matrix/) \
-[Extracting view Frustum paper](http://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf) \
+[Extracting view Frustum paper](http://www8.cs.umu.se/kurser/5DV051/HT12/lab/plane_extraction.pdf)
