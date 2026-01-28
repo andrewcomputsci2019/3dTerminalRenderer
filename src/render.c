@@ -361,7 +361,7 @@ inline void render_faces_with_vertex_colors(vec4* transformed_verts, dynamicFace
 		a_z = a[2];
 		b_z = b[2];
 		c_z = c[2];
-		if (min(min(a[2], b[2]), c[2]) > -Z_NEAR) {
+		if (max(max(a[2], b[2]), c[2]) > -Z_NEAR) { //swaped min with max (needed since we dont do clipping, thus producing projection issues) (if cliping is added this should be swaped to min instead of max)
 			continue; // discard for now, fixed by clipping
 		}
 		// these vectors are in view space
@@ -627,9 +627,11 @@ inline void rendermodeSuperSample1(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 			glm_vec2_sub(point_cpy, a_prime, v2);
 			/*calculateBayCords(v0, v1, v2, bayValues);*/
 			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
-			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
-				continue; // not in triangle
-			}
+			int inside =
+				(bayValues[0] >= 0.0f) &
+				(bayValues[1] >= 0.0f) &
+				(bayValues[2] >= 0.0f);
+			if (!inside) continue;
 			float z_interp = bayValues[0] * a_z + bayValues[1] * b_z + bayValues[2] * c_z;
 			float z_buffer_val = screen->z_buffer[(y * 2 + dy) * (screen->width*2) + x * 2 + dx];
 			// todo check z interp value with buffer and overwrite if nesscary
@@ -659,9 +661,11 @@ inline void rendermodeSuperSample1_with_vertex_colors(vec2 v0, vec2 v1, vec2 a_p
 			glm_vec2_sub(point_cpy, a_prime, v2);
 			/*calculateBayCords(v0, v1, v2, bayValues);*/
 			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
-			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
-				continue; // not in triangle
-			}
+			int inside =
+				(bayValues[0] >= 0.0f) &
+				(bayValues[1] >= 0.0f) &
+				(bayValues[2] >= 0.0f);
+			if (!inside) continue;
 			float z_interp = bayValues[0] * a_z + bayValues[1] * b_z + bayValues[2] * c_z;
 			vec3 c_a_scaled;
 			vec3 c_b_scaled;
@@ -715,9 +719,11 @@ inline void rendermodeSuperSample2(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 			glm_vec2_sub(point_cpy, a_prime, v2);
 			/*calculateBayCords(v0, v1, v2, bayValues);*/
 			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
-			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
-				continue; // not in triangle
-			}
+			int inside =
+				(bayValues[0] >= 0.0f) &
+				(bayValues[1] >= 0.0f) &
+				(bayValues[2] >= 0.0f);
+			if (!inside) continue;
 			float z_interp = bayValues[0] * a_z + bayValues[1] * b_z + bayValues[2] * c_z;
 			float z_buffer_val = screen->z_buffer[(y * 4 + dy) * (screen->width * 2) + x * 2 + dx];
 			if (z_interp > z_buffer_val) {
@@ -748,9 +754,11 @@ inline void rendermodeSuperSample2_with_vertex_color(vec2 v0, vec2 v1, vec2 a_pr
 			glm_vec2_sub(point_cpy, a_prime, v2);
 			/*calculateBayCords(v0, v1, v2, bayValues);*/
 		    calculateBayCords_cache(v0, v1, v2, cache, bayValues);
-			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
-				continue; // not in triangle
-			}
+			int inside =
+				(bayValues[0] >= 0.0f) &
+				(bayValues[1] >= 0.0f) &
+				(bayValues[2] >= 0.0f);
+			if (!inside) continue;
 			float z_interp = bayValues[0] * a_z + bayValues[1] * b_z + bayValues[2] * c_z;
 			float z_buffer_val = screen->z_buffer[(y * 4 + dy) * (screen->width * 2) + x * 2 + dx];
 			vec3 c_a_scaled;
@@ -862,9 +870,11 @@ inline void renderFace_smaa_mode_0(int start_x, int end_x, int start_y, int end_
 			glm_vec2_sub(point, a_prime, v2);
 			/*calculateBayCords(v0, v1, v2, bayValues);*/
 			calculateBayCords_cache(v0, v1, v2, &cache, bayValues);
-			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
-				continue; // not in triangle
-			}
+			int inside =
+				(bayValues[0] >= 0.0f) &
+				(bayValues[1] >= 0.0f) &
+				(bayValues[2] >= 0.0f);
+			if (!inside) continue;
 			float z_interp = bayValues[0] * a_z + bayValues[1] * b_z + bayValues[2] * c_z;
 			float z_buffer_val = screen->z_buffer[y * screen->width + x];
 			// do z_buffering here, the z value here should be negative since from the camera perspective
@@ -1051,15 +1061,17 @@ void initRenderCode(int width, int height,int smaa_mode)
 }
 
 void add_object_to_scene(object* obj) {
-	static int index;
-	if (size_object_array < 10) {
+	int index = size_object_array;
+	if (index < 10) {
         sceneObjects[index] = obj;
-		index += 1;
+		size_object_array += 1;
 	}
-	size_object_array += 1;
 }
 
 void remove_object_from_scene(object* obj) {
+	if (!size_object_array) {
+		return;
+	}
 	int indexer = 0;
 	for (; indexer < size_object_array; indexer++) {
 		if (obj == sceneObjects[indexer]) {

@@ -115,6 +115,8 @@ object* get_object_from_ply(const char* plyFile, plyLayout def)
 		return NULL;
 	}
 	reset_scale_vector(ply_object);
+	glm_vec3_zero(ply_object->postion);
+	ply_object->x_rotation = ply_object->y_rotation = ply_object->z_rotation = 0.0f;
 	Parser_Wrapper wrapper = { 0 };
 	wrapper.ply_object = ply_object;
 	wrapper.face_idx = 0;
@@ -143,5 +145,6 @@ object* get_object_from_ply(const char* plyFile, plyLayout def)
 		return NULL;
 	}
 	ply_close(ply);
+	setBoundingBox(ply_object);
 	return ply_object;
 }
