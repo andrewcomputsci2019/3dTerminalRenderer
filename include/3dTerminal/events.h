@@ -52,6 +52,6 @@ void setShouldExit(bool exit);
 
 bool consoleInputAvailable();
 
-char getConsoleInput();
+unsigned char getConsoleInput();
 
 MOUSE_DEVICE getMouse();

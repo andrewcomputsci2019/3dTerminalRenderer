@@ -8,12 +8,12 @@
 typedef struct dynamicFaceArray_t {
 	size_t size;
 	size_t cap;
-	vec3** data;
+	ivec3** data;
 }dynamicFaceArray;
 
-inline void dynamicFaceArray_add(dynamicFaceArray * array, vec3* data) {
+inline void dynamicFaceArray_add(dynamicFaceArray * array, ivec3* data) {
 	if (array->cap == array->size) {
-		vec3** tmp = (vec3**)realloc(array->data, sizeof(vec3*) * array->cap * 2);
+		ivec3** tmp = (ivec3**)realloc(array->data, sizeof(ivec3*) * array->cap * 2);
 		if (!tmp) {
 			fprintf(stderr,"OOM inside dynamic array was unable to expand dyanmic array\n");
 			exit(4);
@@ -28,7 +28,7 @@ inline void dynamicFaceArray_add(dynamicFaceArray * array, vec3* data) {
 inline void dynamicFaceArray_create(dynamicFaceArray* array) {
 	array->cap = 10;
 	array->size = 0;
-	array->data = (vec3**)malloc(sizeof(vec3*) * 10);
+	array->data = (ivec3**)malloc(sizeof(ivec3*) * 10);
 	if (!array->data) {
 		fprintf(stderr,"OOM inside dynamic array was unable to expand dyanmic array\n");
 		exit(4);

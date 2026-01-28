@@ -87,9 +87,11 @@ static BOOL sysKillSignalHandler(DWORD crtlType) {
 // used to init input buffer inside events.h
 extern void init_events_code();
 extern void initRenderCode(int width, int height,int smaa_mode);
-void initApplication() {
+void initApplication(int smaa_mode) {
 	handle_stdin = GetStdHandle(STD_INPUT_HANDLE);
 	handle_stdout = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleOutputCP(CP_UTF8);
+	SetConsoleCP(CP_UTF8);
 	DWORD mode;
 	mode = GetConsoleMode(handle_stdin, &mode);
 	// get updates from window ie resize and mouse click etc
@@ -99,15 +101,35 @@ void initApplication() {
 	if (!SetConsoleMode(handle_stdin, (mode | ENABLE_WINDOW_INPUT | ENABLE_MOUSE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_EXTENDED_FLAGS))) {
 		display_error_message();
 	}
+	mode = 0;
+	if (!GetConsoleMode(handle_stdout, &mode)) {
+		display_error_message();
+	}
+	mode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+	if (!SetConsoleMode(handle_stdout, mode)) {
+		display_error_message();
+	}
 	if(!SetConsoleCtrlHandler((PHANDLER_ROUTINE)sysKillSignalHandler, TRUE))
 		display_error_message();
 	init_events_code();
 	int width;
 	int height;
 	get_console_dim(&width, &height);
-	// todo make smaa_mode user assignmable, ie passed in from command line paramaters
-	initRenderCode(width, height,0);
+	initRenderCode(width, height, smaa_mode);
 }
+
+void initApplication_bg_mode(){
+	initApplication(0);
+}
+
+void initApplication_unicode_1(){
+	initApplication(1);
+}
+
+void initApplication_unicode_2(){
+	initApplication(2);
+}
+
 void programExit(unsigned short value)
 {
 	printf("Killing program....\n");

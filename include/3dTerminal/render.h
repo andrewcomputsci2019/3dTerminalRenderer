@@ -58,13 +58,16 @@ typedef struct object_t {
 	mat4 modelMat;
 	vec3 boundingBox[2];
 	vec3 postion;// in world space
+	vec3 scale;
 	vec3* mesh; // defition of the vertices
-	vec3* faceList;
+	ivec3* faceList;
+	ivec3* vertex_color; //rgb channels should consiend with the vertex at the same idx
 	size_t meshSize;
 	size_t faceListLength;
 	float x_rotation; // in model space, around x axis
 	float y_rotation; // in model space
 	float z_rotation; // in model space
+	int   has_vertex_color; // > 0 yes, <= 0 no
 }object;
 
 
@@ -75,6 +78,7 @@ void updateScreenSize(int width, int height);
 
 void updateCamera(vec3 position);
 
+void setWireframeMode(int enabled);
 
 void draw(); // drawl all object from the scene to screen
 
@@ -90,3 +94,9 @@ void setBoundingBox(object* obj);
 // box is expected to be an array of 2 vec 3 given in min max order
 // the bounding box is epxected to be in model cords
 void setKnownBoundingBox(object* obj, vec3* box);
+
+// get the renders camera (useful when hooking up mouse and keyboard functions) (note only yaw and pitch should be modifed directly) 
+Camera * getCamera();
+
+
+void reset_scale_vector(object* obj);

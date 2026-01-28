@@ -8,7 +8,7 @@
 
 
 typedef struct InputBuffer_t{
-	char* data;
+	unsigned char* data;
 	int size;
 	int capacity;
 	int head;
@@ -34,7 +34,7 @@ typedef struct MOUSE_EVENT_QUEUE_t{
 
 
 
-bool addToBuffer(InputBuffer * queue,char data) {
+bool addToBuffer(InputBuffer * queue, unsigned char data) {
 	if (queue->capacity == queue->size) {
 		return false;
 	}
@@ -45,12 +45,12 @@ bool addToBuffer(InputBuffer * queue,char data) {
 }
 
 
-char getFirst(InputBuffer* queue) {
+unsigned char getFirst(InputBuffer* queue) {
 	if (queue->size == 0) {
 		fprintf(stderr, "Input Buffer has empty queue, yet was accessed\n");
 		return 0;
 	}
-	char val = queue->data[queue->head];
+	unsigned char val = queue->data[queue->head];
 	queue->size -= 1;
 	queue->head = (1 + queue->head) % queue->capacity;
 	return val;
@@ -72,7 +72,7 @@ void createBuffer(InputBuffer * buffer, int capacity) {
 	if (buffer->data != NULL) {
 		fprintf(stderr, "Input Buffer struct passed in has already been initalized\n");
 	}
-	buffer->data = (char*)malloc(sizeof(char) * capacity);
+	buffer->data = (char*)malloc(sizeof(unsigned char) * capacity);
 	buffer->size = 0;
 	buffer->capacity = capacity;
 	buffer->head = 0;
