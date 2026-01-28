@@ -28,6 +28,14 @@ typedef struct TriBaryCache_t {
 	float invDenom;
 }TriBaryCache;
 
+
+static inline void compute_bary_cache(vec2 v0, vec2 v1, TriBaryCache* dest) {
+	dest->d00 = glm_vec2_dot(v0, v0);
+	dest->d01 = glm_vec2_dot(v0, v1);
+	dest->d11 = glm_vec2_dot(v1, v1);
+	dest->invDenom = 1.0f / (dest->d00 * dest->d11 - dest->d01 * dest->d01);
+}
+
 static Screen* screen;
 static Camera* camera;
 static object* sceneObjects[10];
@@ -602,7 +610,7 @@ void draw()
 }
 
 
-inline void rendermodeSuperSample1(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z) {
+inline void rendermodeSuperSample1(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, TriBaryCache * cache) {
 	static float step = 0.50;
 	static float center = 0.25;
 	static vec3 bayValues;
@@ -617,7 +625,8 @@ inline void rendermodeSuperSample1(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 			point_cpy[0] = initPoint[0] + (step * dx) + center;
 			point_cpy[1] = initPoint[1] + (step * dy) + center;
 			glm_vec2_sub(point_cpy, a_prime, v2);
-			calculateBayCords(v0, v1, v2, bayValues);
+			/*calculateBayCords(v0, v1, v2, bayValues);*/
+			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
 			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
 				continue; // not in triangle
 			}
@@ -633,7 +642,7 @@ inline void rendermodeSuperSample1(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 	}
 }
 
-inline void rendermodeSuperSample1_with_vertex_colors(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c) {
+inline void rendermodeSuperSample1_with_vertex_colors(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c, TriBaryCache * cache) {
 	static float step = 0.50;
 	static float center = 0.25;
 	static vec3 bayValues;
@@ -648,7 +657,8 @@ inline void rendermodeSuperSample1_with_vertex_colors(vec2 v0, vec2 v1, vec2 a_p
 			point_cpy[0] = initPoint[0] + (step * dx) + center;
 			point_cpy[1] = initPoint[1] + (step * dy) + center;
 			glm_vec2_sub(point_cpy, a_prime, v2);
-			calculateBayCords(v0, v1, v2, bayValues);
+			/*calculateBayCords(v0, v1, v2, bayValues);*/
+			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
 			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
 				continue; // not in triangle
 			}
@@ -685,7 +695,7 @@ inline void rendermodeSuperSample1_with_vertex_colors(vec2 v0, vec2 v1, vec2 a_p
 	}
 }
 
-inline void rendermodeSuperSample2(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z) {
+inline void rendermodeSuperSample2(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, TriBaryCache * cache) {
 	static float x_step = 0.50;
 	static float y_step = 1.0 / 4.0;
 	static float x_center = 0.25;
@@ -703,7 +713,8 @@ inline void rendermodeSuperSample2(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 			point_cpy[0] = initPoint[0] + (x_step * dx) + x_center;
 			point_cpy[1] = initPoint[1] + (y_step * dy) + y_center;
 			glm_vec2_sub(point_cpy, a_prime, v2);
-			calculateBayCords(v0, v1, v2, bayValues);
+			/*calculateBayCords(v0, v1, v2, bayValues);*/
+			calculateBayCords_cache(v0, v1, v2, cache, bayValues);
 			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
 				continue; // not in triangle
 			}
@@ -717,7 +728,7 @@ inline void rendermodeSuperSample2(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoin
 	}
 }
 
-inline void rendermodeSuperSample2_with_vertex_color(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c) {
+inline void rendermodeSuperSample2_with_vertex_color(vec2 v0, vec2 v1, vec2 a_prime, vec2 initPoint, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c, TriBaryCache * cache) {
 	static float x_step = 0.50;
 	static float y_step = 1.0 / 4.0;
 	static float x_center = 0.25;
@@ -735,7 +746,8 @@ inline void rendermodeSuperSample2_with_vertex_color(vec2 v0, vec2 v1, vec2 a_pr
 			point_cpy[0] = initPoint[0] + (x_step * dx) + x_center;
 			point_cpy[1] = initPoint[1] + (y_step * dy) + y_center;
 			glm_vec2_sub(point_cpy, a_prime, v2);
-			calculateBayCords(v0, v1, v2, bayValues);
+			/*calculateBayCords(v0, v1, v2, bayValues);*/
+		    calculateBayCords_cache(v0, v1, v2, cache, bayValues);
 			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
 				continue; // not in triangle
 			}
@@ -837,6 +849,8 @@ inline void wireframeRender(vec2 a_prime, vec2 b_prime, vec2 c_prime, float a_z,
 }
 
 inline void renderFace_smaa_mode_0(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z) {
+	TriBaryCache cache = { 0.0f };
+	compute_bary_cache(v0, v1, &cache);
 	for (int x = start_x; x <= end_x; x++) {
 		for (int y = start_y; y <= end_y; y++) {
 			// need to get baycords
@@ -846,7 +860,8 @@ inline void renderFace_smaa_mode_0(int start_x, int end_x, int start_y, int end_
 			point[0] = (float)x;
 			point[1] = (float)y;
 			glm_vec2_sub(point, a_prime, v2);
-			calculateBayCords(v0, v1, v2, bayValues);
+			/*calculateBayCords(v0, v1, v2, bayValues);*/
+			calculateBayCords_cache(v0, v1, v2, &cache, bayValues);
 			if (bayValues[0] < 0 || bayValues[1] < 0 || bayValues[2] < 0) {
 				continue; // not in triangle
 			}
@@ -862,22 +877,26 @@ inline void renderFace_smaa_mode_0(int start_x, int end_x, int start_y, int end_
 	}
 }
 inline void renderFace_smaa_mode_1(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z) {
+	TriBaryCache cache = { 0.0f };
+	compute_bary_cache(v0, v1, &cache);
 	for (int x = start_x; x <= end_x; x++) {
 		for (int y = start_y; y <= end_y; y++) {
 			vec2 point;
 			point[0] = (float)x;
 			point[1] = (float)y;
-			rendermodeSuperSample1(v0, v1, a_prime, point, a_z, b_z, c_z);
+			rendermodeSuperSample1(v0, v1, a_prime, point, a_z, b_z, c_z, &cache);
 		}
 	}
 }
 inline void renderFace_smaa_mode_2(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z) {
+	TriBaryCache cache = { 0.0f };
+	compute_bary_cache(v0, v1, &cache);
 	for (int x = start_x; x <= end_x; x++) {
 		for (int y = start_y; y <= end_y; y++) {
 			vec2 point;
 			point[0] = (float)x;
 			point[1] = (float)y;
-			rendermodeSuperSample2(v0, v1, a_prime, point, a_z, b_z, c_z);
+			rendermodeSuperSample2(v0, v1, a_prime, point, a_z, b_z, c_z, &cache);
 		}
 	}
 }
@@ -885,12 +904,14 @@ inline void renderFace_smaa_mode_2(int start_x, int end_x, int start_y, int end_
 
 inline void renderFace_smaa_mode_1_with_vertex_colors(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c)
 {
+	TriBaryCache cache = { 0.0f };
+	compute_bary_cache(v0, v1, &cache);
 	for (int x = start_x; x <= end_x; x++) {
 		for (int y = start_y; y <= end_y; y++) {
 			vec2 point;
 			point[0] = (float)x;
 			point[1] = (float)y;
-			rendermodeSuperSample1_with_vertex_colors(v0, v1, a_prime, point, a_z, b_z, c_z, c_a, c_b, c_c);
+			rendermodeSuperSample1_with_vertex_colors(v0, v1, a_prime, point, a_z, b_z, c_z, c_a, c_b, c_c, &cache);
 		}
 	}
 }
@@ -898,12 +919,14 @@ inline void renderFace_smaa_mode_1_with_vertex_colors(int start_x, int end_x, in
 
 inline void renderFace_smaa_mode_2_with_vertex_colors(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c)
 {
+	TriBaryCache cache = { 0.0f };
+	compute_bary_cache(v0,v1,&cache);
 	for (int x = start_x; x <= end_x; x++) {
 		for (int y = start_y; y <= end_y; y++) {
 			vec2 point;
 			point[0] = (float)x;
 			point[1] = (float)y;
-			rendermodeSuperSample2_with_vertex_color(v0, v1, a_prime, point, a_z, b_z, c_z, c_a, c_b, c_c);
+			rendermodeSuperSample2_with_vertex_color(v0, v1, a_prime, point, a_z, b_z, c_z, c_a, c_b, c_c, &cache);
 		}
 	}
 }
