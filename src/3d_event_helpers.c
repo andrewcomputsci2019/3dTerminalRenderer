@@ -21,60 +21,36 @@ void set_camera(Camera* render_camera)
 }
 
 
-void process_keyboard_input_movement(unsigned char input, mat4 inverseRotationMatrix)
+// todo fix this to use computed values inside of camera object no need for inverse rotation matrix
+
+void process_keyboard_input_movement(unsigned char input)
 {
 	if (!camera)
 		return;
-	const float cameraSpeed = 0.1f;
-	vec3 camForward = { 0.0f, 0.0f, -1.0f };
-	vec3 camRight = { 1.0f, 0.0f,  0.0f };
 
-	vec4 world4;
-	vec3 worldDir;
-	vec3 endPos = { 0.0f,0.0f,0.0f };
-
-
+	const float cameraSpeed = 0.5f;
+	vec3 delta = { 0.0f, 0.0f, 0.0f };
 
 	if (input == VK_LEFT || input == 'A') {
-		glm_mat4_mulv(inverseRotationMatrix, (vec4) { camRight[0], camRight[1], camRight[2], 0.0f }, world4);
-		glm_vec3(world4, worldDir);
-		glm_vec3_normalize(worldDir);
-		glm_vec3_scale(worldDir, -cameraSpeed, worldDir);
-		glm_vec3_add(camera->pos, worldDir, endPos);
-		updateCamera(endPos);
+		glm_vec3_scale(camera->right, -cameraSpeed, delta);
 	}
 	else if (input == VK_RIGHT || input == 'D') {
-		glm_mat4_mulv(inverseRotationMatrix, (vec4) { camRight[0], camRight[1], camRight[2], 0.0f }, world4);
-		glm_vec3(world4, worldDir);
-		glm_vec3_normalize(worldDir);
-		glm_vec3_scale(worldDir, cameraSpeed, worldDir);
-		glm_vec3_add(camera->pos, worldDir, endPos);
-		updateCamera(endPos);
+		glm_vec3_scale(camera->right, cameraSpeed, delta);
 	}
 	else if (input == VK_UP || input == 'W') {
-		glm_mat4_mulv(inverseRotationMatrix, (vec4) { camForward[0], camForward[1], camForward[2], 0.0f }, world4);
-		glm_vec3(world4, worldDir);
-		glm_vec3_normalize(worldDir);
-		glm_vec3_scale(worldDir, cameraSpeed, worldDir);
-		glm_vec3_add(camera->pos, worldDir, endPos);
-		updateCamera(endPos);
+		glm_vec3_scale(camera->forward, cameraSpeed, delta);
 	}
 	else if (input == VK_DOWN || input == 'S') {
-		glm_mat4_mulv(inverseRotationMatrix, (vec4) { camForward[0], camForward[1], camForward[2], 0.0f }, world4);
-		glm_vec3(world4, worldDir);
-		glm_vec3_normalize(worldDir);
-		glm_vec3_scale(worldDir, -cameraSpeed, worldDir);
-		glm_vec3_add(camera->pos, worldDir, endPos);
-		updateCamera(endPos);
+		glm_vec3_scale(camera->forward, -cameraSpeed, delta);
 	}
 	else if (input == 'I') {
-		glm_vec3_add(camera->pos, (vec3) { 0.0f, cameraSpeed, 0.0f }, endPos);
-		updateCamera(endPos);
+		delta[1] += cameraSpeed;
 	}
 	else if (input == 'J') {
-		glm_vec3_add(camera->pos, (vec3) { 0.0f, -cameraSpeed, 0.0f }, endPos);
-		updateCamera(endPos);
+		delta[1] -= cameraSpeed;
 	}
+
+	glm_vec3_add(camera->pos, delta, camera->pos);
 }
 
 void process_mouse_callback(EVENT_MOUSE* event_p)
@@ -111,6 +87,9 @@ void process_mouse_callback(EVENT_MOUSE* event_p)
 		
 		x_offset *= -sensitivity;
 		y_offset *= -sensitivity;
+
+		tracker.yaw = camera->yaw;
+		tracker.pitch = camera->pitch;
 
 		tracker.yaw += x_offset;
 		tracker.pitch += y_offset;

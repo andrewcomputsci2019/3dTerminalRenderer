@@ -11,10 +11,10 @@
 #define UP 0.0f , 1.0f , 0.0f
 #define FORWARD 0.0f, 0.0f, -1.0f
 
-#define VFOV 90.0f
+#define VFOV 120.0f
 
-#define Z_NEAR 0.5f
-#define Z_FAR 50.0f
+#define Z_NEAR 0.05f
+#define Z_FAR 500.0f
 
 #define DEFAULT_COLOR_VEC 255, 255, 255
 #define DEFAULT_COLOR (1 << 24) - 1
@@ -22,6 +22,11 @@
 #define Z_MAX_DEPTH -1000000.0f
 
 
+
+typedef struct TriBaryCache_t {
+	float d00, d01, d11;
+	float invDenom;
+}TriBaryCache;
 
 static Screen* screen;
 static Camera* camera;
@@ -37,7 +42,11 @@ inline void renderFace_smaa_mode_1_with_vertex_colors(int start_x, int end_x, in
 inline void renderFace_smaa_mode_2_with_vertex_colors(int start_x, int end_x, int start_y, int end_y, vec2 v0, vec2 v1, vec2 a_prime, float a_z, float b_z, float c_z, ivec3 c_a, ivec3 c_b, ivec3 c_c);
 inline void wireframeRender(vec2 a_prime, vec2 b_prime, vec2 c_prime, float a_z, float b_z, float c_z);
 
-// todo implement this code to downsample the drawling buffer into the cellInfo buffer
+
+// camera methods 
+inline void update_camera_vectors();
+
+
 inline void downSample_smaa_mode1();
 inline void downSample_smaa_mode2();
 
@@ -61,6 +70,14 @@ inline static void calculateBayCords(vec2 v0, vec2 v1, vec2 v2, vec3 dest){
     dest[0] = (d11 * d20 - d01 * d21) * inverse;
     dest[1] = (d00 * d21 - d01 * d20 )  * inverse;
     dest[2] = 1.0f - dest[0] - dest[1]; // the final value is just the complement
+}
+
+inline static void calculateBayCords_cache(vec2 v0, vec2 v1, vec2 v2, TriBaryCache * cache , vec3 dest) {
+	float d20 = glm_vec2_dot(v2, v0);
+	float d21 = glm_vec2_dot(v2, v1);
+	dest[0] = (cache->d11 * d20 - cache->d01 * d21) * cache->invDenom;
+	dest[1] = (cache->d00 * d21 - cache->d01 * d20) * cache->invDenom;
+	dest[2] = 1.0f - dest[0] - dest[1]; // the final value is just the complement
 }
 inline static void calculateNorm(triangle* face, vec3 normal) {
 	vec3 U;
@@ -164,10 +181,13 @@ void updateCamera(vec3 position)
 		programExit(3);
 		return;
 	}
+	// old code fixed via moving lookat per frame
+	//glm_vec3_copy(position, camera->pos);
+	//glm_vec3_add(camera->pos, camera->forward, camera->target);
+	//glm_lookat(camera->pos, camera->target, camera->up, camera->view_matrix);
+	//glm_mat4_inv(camera->view_matrix, camera->camera_to_world);
+
 	glm_vec3_copy(position, camera->pos);
-	glm_vec3_add(camera->pos, camera->forward, camera->target);
-	glm_lookat(camera->pos, camera->target, camera->up, camera->view_matrix);
-	glm_mat4_inv(camera->view_matrix, camera->camera_to_world);
 }
 
 void setWireframeMode(int enabled)
@@ -224,11 +244,17 @@ Camera* createCamera(vec3 origin)
 	glm_vec3_copy((vec3) { FORWARD }, cam_ptr->forward);
 	glm_vec3_copy((vec3) { UP }, cam_ptr->up);
 	glm_vec3_add(cam_ptr->forward, cam_ptr->pos, cam_ptr->target);
-	glm_lookat(cam_ptr->pos, cam_ptr->target,cam_ptr->up, cam_ptr->view_matrix);
-	glm_mat4_inv(cam_ptr->view_matrix, cam_ptr->camera_to_world);
+	cam_ptr->last_pitch = -1.0;
+	cam_ptr->last_yaw = -1.0;
+
+	//  old camera system code
+	//glm_lookat(cam_ptr->pos, cam_ptr->target,cam_ptr->up, cam_ptr->view_matrix);
+	//glm_mat4_inv(cam_ptr->view_matrix, cam_ptr->camera_to_world);
+	
+
 	// in degrees
 	cam_ptr->pitch = 0.0f; //looking straight in between looking straight up and straight down [-90,90]
-	cam_ptr->yaw = 0.0f; // [-180,180] this really doesn't matter since yaw can be periodic without the user noticing
+	cam_ptr->yaw = -90.0f; // [-180,180] this really doesn't matter since yaw can be periodic without the user noticing
 	return cam_ptr;
 }
 
@@ -413,20 +439,25 @@ void draw()
 	memset(screen->pixelBuffer, 0, sizeof(int) * screen->width * screen->height);
 	mat4 viewProj;
 	mat4 viewMatrix;
-	mat4 rotationMatrix;
+	//mat4 rotationMatrix;
     mat4 MV;
-	vec3 cameraDirection;
+	//vec3 cameraDirection;
 
-	glm_mat4_identity(rotationMatrix);
-	glm_rotate(rotationMatrix, glm_rad(camera->pitch), (vec3) { 1.0f, 0.0f, 0.0f }); // rotate about x-axis
-	glm_rotate(rotationMatrix, glm_rad(camera->yaw), (vec3) { 0.0f, 1.0f, 0.0f }); // rotate about y-axis
-	glm_mat4_mul(camera->view_matrix, rotationMatrix, viewMatrix);
+
+	update_camera_vectors();
+
+	//glm_mat4_identity(rotationMatrix);
+	//glm_rotate(rotationMatrix, glm_rad(camera->pitch), (vec3) { 1.0f, 0.0f, 0.0f }); // rotate about x-axis
+	//glm_rotate(rotationMatrix, glm_rad(camera->yaw), (vec3) { 0.0f, 1.0f, 0.0f }); // rotate about y-axis
+	//glm_mat4_mul(camera->view_matrix, rotationMatrix, viewMatrix);
+	glm_vec3_add(camera->pos, camera->forward, camera->target);
+	glm_lookat(camera->pos, camera->target, camera->up, viewMatrix);
 	glm_mat4_mul(camera->projection_perspective.project_matrix, viewMatrix, viewProj); // read it right to left, proj * view
 
 	// extract view frustum from camera
 	vec4 planes[6]; // 6 vec4 one for each plane
 	glm_frustum_planes(viewProj, planes); // in world space
-	glm_mat4_mulv3(rotationMatrix, camera->forward, 1.0f, cameraDirection); // get rotated camera direction, need for back face culling
+	//glm_mat4_mulv3(rotationMatrix, camera->forward, 1.0f, cameraDirection); // get rotated camera direction, need for back face culling // removed due to camera system update
     // render loop ie a d
 	for (int i = 0; i < size_object_array; i++) {
 
@@ -467,7 +498,7 @@ void draw()
                 calculateNorm(&triangle, norm);
 				#ifdef BACKFACE_CULL_ENABLED
 					// do back face calc here 
-					float value = glm_vec3_dot(cameraDirection, norm);
+					float value = glm_vec3_dot((vec3) { FORWARD }, norm);
 					if (value > 0.0f) {
 						// backface cull, disregard face
 						continue;
@@ -886,6 +917,35 @@ inline void decomposeIntColor(int input, ivec3 output) {
 	output[2] = channelB;
 }
 
+inline void update_camera_vectors()
+{
+	// todo update camera vectors using pitch and yaw
+	const float EPS = 0.0001f;
+	if (fabsf(camera->yaw - camera->last_yaw) < EPS &&
+		fabsf(camera->pitch - camera->last_pitch) < EPS)
+	{
+		return; // orientation unchanged
+	}
+
+	camera->last_yaw = camera->yaw;
+	camera->last_pitch = camera->pitch;
+
+	float yaw = glm_rad(camera->last_yaw);
+	float pitch = glm_rad(camera->last_pitch);
+
+	vec3 forward = {
+		cosf(yaw) * cosf(pitch),
+		sinf(pitch),
+		sinf(yaw) * cosf(pitch)
+	};
+	glm_vec3_normalize(forward);
+	glm_vec3_copy(forward, camera->forward);
+
+	vec3 world_up = { UP };
+	glm_vec3_crossn(camera->forward, world_up, camera->right);
+	glm_vec3_crossn(camera->right, camera->forward, camera->up);
+}
+
 inline void downSample_smaa_mode1()
 {
 	
@@ -955,6 +1015,7 @@ void initRenderCode(int width, int height,int smaa_mode)
 	vec3 origin;
 	glm_vec3_zero(origin);
 	camera = createCamera(origin);
+	update_camera_vectors();
 	if (!camera) {
 		fprintf(stderr, "OOM inside render start up code\n");
 		programExit(3);
@@ -1061,3 +1122,5 @@ void reset_scale_vector(object* obj)
 	obj->scale[1] = 1.0;
 	obj->scale[2] = 1.0;
 }
+
+

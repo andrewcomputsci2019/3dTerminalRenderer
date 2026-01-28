@@ -7,7 +7,7 @@
 
 void set_camera(Camera* render_camera);
 
-void process_keyboard_input_movement(unsigned char input, mat4 inverseMatrix);
+void process_keyboard_input_movement(unsigned char input);
 
 void process_mouse_callback(EVENT_MOUSE* event_p);
 

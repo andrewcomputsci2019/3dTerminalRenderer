@@ -27,7 +27,7 @@ void posCallBack(MOUSE_DEVICE* state, int x, int y) {
 
 
 int main() {
-	initApplication(1);
+	initApplication(2);
 	show_program_info();
     /*setMousePositionCallBack(posCallBack);*/  // changed with mouse and keyboard handler uncomment to have original code
 	setWireframeMode(0);
@@ -59,7 +59,7 @@ int main() {
 	obj.z_rotation = 0;
 	obj.postion[0] = 2.0f;
 	obj.postion[1] = 2.5f;
-	obj.postion[2] = -7.5f;
+	obj.postion[2] = -15.5f;
 	obj.has_vertex_color = 1;
 	obj.vertex_color = _aligned_malloc(sizeof(ivec3) * 3, 16);
 	if (!obj.vertex_color) {
@@ -132,7 +132,7 @@ int main() {
 	cube.z_rotation = 0;
 	cube.postion[0] = -4.5f;
 	cube.postion[1] = 0.5f;
-	cube.postion[2] = -4.5f;
+	cube.postion[2] = -18.5f;
 
 	float start_x = cube.postion[0];
 	float start_y = cube.postion[1];
@@ -177,9 +177,7 @@ int main() {
 				wireframe = !wireframe;
 				setWireframeMode(wireframe);
 			}
-			mat4 inv;
-			getInverseRotationMatrix(inv);
-			process_keyboard_input_movement(c, inv);
+			process_keyboard_input_movement(c);
 			/*
 				end additions
 			*/

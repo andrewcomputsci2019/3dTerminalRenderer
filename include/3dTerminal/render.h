@@ -31,14 +31,18 @@ typedef struct perpsective_t {
 
 typedef struct Camera_t {
 	perspective projection_perspective;
-	mat4 camera_to_world; // look at matrix
-	mat4 view_matrix; //inverse of the above
+	//mat4 camera_to_world; // look at matrix
+	//mat4 view_matrix; //inverse of the above
 	vec3 pos; // inital position is just the 
 	vec3 up;
 	vec3 forward;
+	vec3 right;
 	vec3 target; // used in look at transformation
 	float pitch; // up down angle
 	float yaw; // left right angle
+
+	float last_pitch;
+	float last_yaw;
 }Camera;
 
 

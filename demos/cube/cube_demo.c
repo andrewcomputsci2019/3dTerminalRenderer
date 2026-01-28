@@ -146,22 +146,49 @@ int main() {
 
 	cube.postion[0] = 0.0f;
 	cube.postion[1] = 0.0f;
-	cube.postion[2] = -3.5f;
+	cube.postion[2] = -9.5f;
+
+	vec3 centroid;
+	glm_vec3_zero(centroid);
+	for (size_t i = 0; i < cube.meshSize; i++) {
+		centroid[0] += cube.mesh[i][0];
+		centroid[1] += cube.mesh[i][1];
+		centroid[2] += cube.mesh[i][2];
+	}
+
+	glm_vec3_scale(centroid, 1.0f / cube.meshSize, centroid);
+
+	for (size_t i = 0; i < cube.meshSize; i++) {
+		glm_vec3_sub(cube.mesh[i], centroid, cube.mesh[i]);
+	}
 
 	// hooks up mouse to the fp camera
-	set_camera(getCamera());
-	setMouseCallBack(process_mouse_callback);
-
+	//set_camera(getCamera());
+	//setMouseCallBack(process_mouse_callback);
+	Camera* camera = getCamera();
 	updateObjectModelMat(&cube);
 	setBoundingBox(&cube);
+ 
+	float baseRadius = 6.0f;
+
+	float zoomAmp = 1.0f;
+	float zoomSpeed = 0.5f;
+
 
 	clock_t lastTime, currTime;
 	double total_time = 0.0;
 	lastTime = clock();
 	add_object_to_scene(&cube);
 	int wireframe = 0;
-	float rotation_speed = 180.0f;
+	float rotation_speed = 2.0f;
 	float start_pos = cube.postion[1];
+
+	// orbit camera system
+	float camera_rotation_speed = 10.0f;
+	float yawRad;
+	float pitchRad;
+	vec3 orbitTarget;
+	glm_vec3_copy(cube.postion, orbitTarget);
 	while (!shouldExit()) {
 		currTime = clock();
 		double delta = (double)(currTime - lastTime) / CLOCKS_PER_SEC;
@@ -173,13 +200,30 @@ int main() {
 				wireframe = !wireframe;
 				setWireframeMode(wireframe);
 			}
-			mat4 inv;
-			getInverseRotationMatrix(inv);
-			process_keyboard_input_movement(c, inv);
+			//process_keyboard_input_movement(c);
 		}
+
+		float radius =  baseRadius + sinf(total_time * zoomSpeed) * zoomAmp;
+		camera->yaw += camera_rotation_speed * delta;
+		camera->yaw = fmodf(camera->yaw, 360.0f);
+		yawRad = glm_rad(camera->yaw);
+		pitchRad = glm_rad(camera->pitch);
+
+		camera->pos[0] = orbitTarget[0] - cosf(yawRad) * cosf(pitchRad) * radius;
+		camera->pos[1] = orbitTarget[1] - sinf(pitchRad) * radius;
+		camera->pos[2] = orbitTarget[2] - sinf(yawRad) * cosf(pitchRad) * radius;
+		
+		//printf(
+		//	"cam: (%.3f %.3f %.3f)  target: (%.3f %.3f %.3f)  dist: %.3f\n",
+		//	camera->pos[0], camera->pos[1], camera->pos[2],
+		//	orbitTarget[0], orbitTarget[1], orbitTarget[2],
+		//	glm_vec3_distance(camera->pos, target)
+		//);
+
 		lastTime = currTime;
 		draw();
-		/*cube.x_rotation = fmodf(total_time * rotation_speed, 360.0f);*/
+		cube.z_rotation = fmodf(total_time * rotation_speed, 360.0f);
+		cube.postion[1] = start_pos - 0.25f * sin(total_time);
 		updateObjectModelMat(&cube);
 	}
 
