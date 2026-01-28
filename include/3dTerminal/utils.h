@@ -35,7 +35,12 @@ void show_program_info();
 
 
 // anything that needs to be inited should be in here on appliaction startup
-void initApplication();
+void initApplication(int smma_mode);
 
+void initApplication_bg_mode();
+
+void initApplication_unicode_1();
+
+void initApplication_unicode_2();
 
 void programExit(unsigned short value);

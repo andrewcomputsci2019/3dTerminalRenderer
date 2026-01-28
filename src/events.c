@@ -59,7 +59,7 @@ MOUSE_DEVICE mouse = { false,false,0,0 };
 					case KEY_EVENT:
 						// only add keys that are pressed not released
 						if(inputRecord[i].Event.KeyEvent.bKeyDown)
-							addToBuffer(&console_inputs_buffer, inputRecord[i].Event.KeyEvent.uChar.AsciiChar);
+							addToBuffer(&console_inputs_buffer, inputRecord[i].Event.KeyEvent.wVirtualKeyCode);
 						break;
 					case MOUSE_EVENT:
 						EVENT_MOUSE message = { .event = IGNORE_VALUE, .button = LEFT, .scrollDirection = 0 };
@@ -123,7 +123,7 @@ MOUSE_DEVICE mouse = { false,false,0,0 };
 		last_call = now;
 		// only gets the subset of the keyboard this function
 		// has fairly large over head from profiling
-		for (int i = 32; i <= 90; i++) {
+		for (int i = VK_LEFT; i < VK_LWIN; i++) {
 			// from gamedev form, good way of getting keystrokes
 			// get upper order of short, tells if key is down
 			//https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getasynckeystate
@@ -235,7 +235,7 @@ MOUSE_DEVICE mouse = { false,false,0,0 };
 		return isAvail(&console_inputs_buffer);
 	}
 
-	char getConsoleInput()
+	unsigned char getConsoleInput()
 	{
 
 		return getFirst(&console_inputs_buffer);
