@@ -200,6 +200,12 @@ int main() {
 				wireframe = !wireframe;
 				setWireframeMode(wireframe);
 			}
+			if (c == 'A') {
+				camera_rotation_speed += 2.5f;
+			}
+			if (c == 'D') {
+				camera_rotation_speed -= 2.5f;
+			}
 			//process_keyboard_input_movement(c);
 		}
 
