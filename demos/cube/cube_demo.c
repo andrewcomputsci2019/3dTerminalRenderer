@@ -169,7 +169,7 @@ int main() {
 	updateObjectModelMat(&cube);
 	setBoundingBox(&cube);
  
-	float baseRadius = 6.0f;
+	float baseRadius = 8.0f;
 
 	float zoomAmp = 1.0f;
 	float zoomSpeed = 0.5f;
