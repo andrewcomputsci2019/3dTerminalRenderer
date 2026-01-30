@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(Terminal3D VERSION 0.9.1 LANGUAGES C)
+project(Terminal3D VERSION 1.0.0 LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
